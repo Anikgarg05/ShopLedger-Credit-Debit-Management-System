@@ -47,7 +47,7 @@ Shop-Credit-System/
 ### 1️⃣ Clone the repository
 
 ```
-git clone <your-repo-link>
+git clone <https://github.com/Anikgarg05/ShopLedger-Credit-Debit-Management-System.git>
 cd Shop-Credit-System
 ```
 
