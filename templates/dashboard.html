@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #333;
+        }
+ 
+        header {
+            background: #667eea;
+            color: white;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+ 
+        header h2 { font-size: 18px; font-weight: 600; }
+ 
+        nav a {
+            color: white;
+            margin-left: 16px;
+            text-decoration: none;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        nav a:hover { opacity: 1; text-decoration: underline; }
+ 
+        /* Legend bar just below header */
+        .legend-bar {
+            background: #eef0fc;
+            border-bottom: 1px solid #d6d9f5;
+            padding: 8px 20px;
+            display: flex;
+            gap: 24px;
+            font-size: 13px;
+            color: #444;
+        }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .legend-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .dot-credit { background: #e53e3e; }
+        .dot-debit  { background: #27ae60; }
+ 
+        .toolbar {
+            background: white;
+            padding: 12px 20px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #e2e8f0;
+        }
+ 
+        .toolbar input[type=text] {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .toolbar input[type=text]:focus { border-color: #667eea; }
+        #searchBox { width: 200px; }
+        #newName   { width: 200px; }
+ 
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            font-weight: 500;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+        .btn:hover  { opacity: 0.88; }
+        .btn:active { transform: scale(0.97); }
+ 
+        .btn-search  { background: #667eea; color: white; }
+        .btn-add     { background: #27ae60; color: white; }
+        .btn-del-all { background: #2d3748; color: white; }
+ 
+        .container { padding: 20px; max-width: 900px; margin: 0 auto; }
+ 
+        .section-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 12px;
+        }
+ 
+        /* Customer card */
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+            border: 1px solid #e8ecf0;
+        }
+ 
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+ 
+        .card-top h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #222;
+        }
+ 
+        .balance { font-size: 14px; margin-top: 4px; }
+ 
+        /* balance-owed = customer owes us → red (credit was given) */
+        .balance-owed     { color: #e53e3e; font-weight: 700; }
+        /* balance-overpaid = customer paid extra → blue */
+        .balance-overpaid { color: #3182ce; font-weight: 700; }
+        /* settled = zero balance → green */
+        .balance-settled  { color: #27ae60; font-weight: 600; }
+ 
+        .actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+ 
+        .act-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            border: none;
+            font-weight: 500;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+        .act-btn:hover  { opacity: 0.85; }
+        .act-btn:active { transform: scale(0.96); }
+ 
+        /* Credit = customer takes = bad for shop = RED */
+        .credit-btn { background: #fed7d7; color: #9b2c2c; }
+        /* Debit = customer pays back = good for shop = GREEN */
+        .debit-btn  { background: #c6f6d5; color: #276749; }
+        .delete-btn { background: #2d3748; color: white; }
+ 
+        .summary-select {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            border: 1px solid #ccc;
+            background: white;
+            cursor: pointer;
+            color: #333;
+        }
+ 
+        /* Inline amount input */
+        .amount-row {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0 4px;
+            padding: 10px 12px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            flex-wrap: wrap;
+        }
+        .amount-row.show { display: flex; }
+ 
+        .amount-row label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #444;
+            white-space: nowrap;
+        }
+ 
+        .amount-row input[type=number] {
+            width: 120px;
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+        }
+        .amount-row input[type=number]:focus { border-color: #667eea; }
+ 
+        .confirm-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            border: none;
+            font-weight: 500;
+        }
+        /* Confirm credit = red (customer is taking) */
+        .confirm-credit { background: #e53e3e; color: white; }
+        /* Confirm debit = green (customer is paying) */
+        .confirm-debit  { background: #27ae60; color: white; }
+        .cancel-btn     { background: #edf2f7; color: #555; }
+ 
+        /* Summary list */
+        .summary-list {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+ 
+        .tx-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 0;
+            font-size: 13px;
+            color: #444;
+            border-bottom: 1px dashed #f0f0f0;
+        }
+        .tx-item:last-child { border-bottom: none; }
+ 
+        .tx-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 99px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        /* credit badge = red (took from shop) */
+        .tx-badge.credit { background: #fed7d7; color: #9b2c2c; }
+        /* debit badge = green (paid to shop) */
+        .tx-badge.debit  { background: #c6f6d5; color: #276749; }
+ 
+        .empty-state {
+            text-align: center;
+            color: #aaa;
+            font-size: 14px;
+            padding: 40px 0;
+        }
+ 
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #2d3748;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 999;
+            max-width: 320px;
+        }
+        .toast.show { opacity: 1; }
+    </style>
+</head>
+<body>
+ 
+<header>
+    <h2>&#128176; Shop Credit Dashboard</h2>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/audit">Audit</a>
+    </nav>
+</header>
+ 
+<!-- Always-visible legend so meaning is never ambiguous -->
+<div class="legend-bar">
+    <div class="legend-item">
+        <div class="legend-dot dot-credit"></div>
+        <span><strong>Credit</strong> — customer takes from shop (balance goes up, they owe more)</span>
+    </div>
+    <div class="legend-item">
+        <div class="legend-dot dot-debit"></div>
+        <span><strong>Debit</strong> — customer pays / returns to shop (balance goes down)</span>
+    </div>
+</div>
+ 
+<div class="toolbar">
+    <input type="text" id="searchBox" placeholder="Search customer…">
+    <button class="btn btn-search" onclick="searchCustomer()">Search</button>
+ 
+    <input type="text" id="newName" placeholder="Customer Name">
+    <button class="btn btn-add" onclick="addCustomer()">+ Add Customer</button>
+ 
+    <button class="btn btn-del-all" onclick="deleteAllCustomers()">Delete All</button>
+</div>
+ 
+<div class="container">
+    <div class="section-title">Top 5 Customers</div>
+    <div id="list"></div>
+</div>
+ 
+<div class="toast" id="toast"></div>
+ 
+<script src="/static/script.js"></script>
+ 
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-box {
+            background: white;
+            padding: 35px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 320px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            outline: none;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        input:focus { border-color: #667eea; }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            margin-top: 8px;
+            transition: background 0.2s;
+        }
+
+        button:hover:not(:disabled) { background: #5a67d8; }
+        button:disabled { background: #a0a8e8; cursor: not-allowed; }
+
+        .error {
+            color: #c0392b;
+            font-size: 13px;
+            margin-top: 10px;
+            min-height: 18px;
+        }
+
+        .loading {
+            font-size: 13px;
+            color: #555;
+            margin-top: 8px;
+            min-height: 18px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-box">
+    <h2>&#128274; Shop Owner Login</h2>
+
+    <input type="email" id="email" placeholder="Enter Email" autocomplete="email">
+    <input type="password" id="password" placeholder="Enter Password" autocomplete="current-password">
+
+    <button id="loginBtn" onclick="login()">Login</button>
+
+    <div class="loading" id="loading"></div>
+    <div class="error" id="error"></div>
+</div>
+
+<script>
+    // Allow Enter key to submit
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') login();
+    });
+
+    function login() {
+        const email    = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const errorBox = document.getElementById('error');
+        const loading  = document.getElementById('loading');
+        const btn      = document.getElementById('loginBtn');
+
+        errorBox.innerText = '';
+
+        if (!email || !password) {
+            errorBox.innerText = 'Please enter both email and password.';
+            return;
+        }
+
+        loading.innerText = 'Checking...';
+        btn.disabled = true;
+
+        fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Server error: ' + res.status);
+            return res.json();
+        })
+        .then(data => {
+            loading.innerText = '';
+            btn.disabled = false;
+
+            if (data.success) {
+                window.location.href = '/dashboard';
+            } else {
+                errorBox.innerText = data.message || 'Login failed.';
+            }
+        })
+        .catch(() => {
+            loading.innerText = '';
+            btn.disabled = false;
+            errorBox.innerText = 'Server error. Please try again.';
+        });
+    }
+</script>
+
+</body>
+</html>
